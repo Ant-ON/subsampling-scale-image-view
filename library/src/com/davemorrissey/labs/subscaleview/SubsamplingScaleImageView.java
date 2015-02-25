@@ -95,8 +95,10 @@ public class SubsamplingScaleImageView extends View {
     public static final int PAN_LIMIT_OUTSIDE = 2;
     /** Allows the image to be panned until a corner reaches the center of the screen but no further. Useful when you want to pan any spot on the image to the exact center of the screen. */
     public static final int PAN_LIMIT_CENTER = 3;
+    /** */
+    public static final int PAN_LIMIT_PADDING = 4;
 
-    private static final List<Integer> VALID_PAN_LIMITS = Arrays.asList(PAN_LIMIT_INSIDE, PAN_LIMIT_OUTSIDE, PAN_LIMIT_CENTER);
+    private static final List<Integer> VALID_PAN_LIMITS = Arrays.asList(PAN_LIMIT_INSIDE, PAN_LIMIT_OUTSIDE, PAN_LIMIT_CENTER, PAN_LIMIT_PADDING);
 
     /** Scale the image so that both dimensions of the image will be equal to or less than the corresponding dimension of the view. The image is then centered in the view. This is the default behaviour and best for galleries. */
     public static final int SCALE_TYPE_CENTER_INSIDE = 1;
@@ -1087,7 +1089,16 @@ public class SubsamplingScaleImageView extends View {
         float scaleWidth = scale * sWidth();
         float scaleHeight = scale * sHeight();
 
-        if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
+        if (panLimit == PAN_LIMIT_PADDING && isImageReady()) {
+        	if (getWidth() >= scaleWidth)
+        		vTranslate.x = Math.max(vTranslate.x, getWidth() - scaleWidth);
+        	else
+        		vTranslate.x = Math.max(vTranslate.x, getWidth()-getPaddingRight() - scaleWidth);
+        	if (getHeight() - getPaddingTop() - getPaddingBottom() >= scaleHeight)
+        		vTranslate.y = Math.max(vTranslate.y, getHeight() - scaleHeight);
+        	else
+        		vTranslate.y = Math.max(vTranslate.y, getHeight()-getPaddingBottom() - scaleHeight);
+        } else if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
             vTranslate.x = Math.max(vTranslate.x, getWidth()/2 - scaleWidth);
             vTranslate.y = Math.max(vTranslate.y, getHeight()/2 - scaleHeight);
         } else if (center) {
@@ -1100,14 +1111,23 @@ public class SubsamplingScaleImageView extends View {
 
         float maxTx;
         float maxTy;
-        if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
+        if (panLimit == PAN_LIMIT_PADDING && isImageReady()) {
+        	if (getWidth() - getPaddingLeft() - getPaddingRight() >= scaleWidth)
+        		maxTx = Math.max(0, (getWidth() - scaleWidth) / 2);
+        	else
+        		maxTx = Math.max(0, getPaddingLeft());
+        	if (getHeight() - getPaddingTop() - getPaddingBottom() >= scaleHeight)
+        		maxTy = Math.max(0, (getHeight() - scaleHeight) / 2);
+        	else
+        		maxTy = Math.max(0, getPaddingTop());
+        } else if (panLimit == PAN_LIMIT_CENTER && isImageReady()) {
             maxTx = Math.max(0, getWidth()/2);
             maxTy = Math.max(0, getHeight()/2);
         } else if (center) {
-            // Asymmetric padding adjustments
-            float xPaddingRatio = getPaddingLeft() > 0 || getPaddingRight() > 0 ? getPaddingLeft()/(float)(getPaddingLeft() + getPaddingRight()) : 0.5f;
-            float yPaddingRatio = getPaddingTop() > 0 || getPaddingBottom() > 0 ? getPaddingTop()/(float)(getPaddingTop() + getPaddingBottom()) : 0.5f;
-        	
+	        // Asymmetric padding adjustments
+	        float xPaddingRatio = getPaddingLeft() > 0 || getPaddingRight() > 0 ? getPaddingLeft()/(float)(getPaddingLeft() + getPaddingRight()) : 0.5f;
+	        float yPaddingRatio = getPaddingTop() > 0 || getPaddingBottom() > 0 ? getPaddingTop()/(float)(getPaddingTop() + getPaddingBottom()) : 0.5f;
+
             maxTx = Math.max(0, (getWidth() - scaleWidth) * xPaddingRatio);
             maxTy = Math.max(0, (getHeight() - scaleHeight) * yPaddingRatio);
         } else {
