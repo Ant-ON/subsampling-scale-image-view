@@ -210,6 +210,9 @@ public class SubsamplingScaleImageView extends View {
     // Volatile fields used to reduce object creation
     private ScaleAndTranslate satTemp;
 
+    // Image click listener
+    private OnImageClickListener onImageClickListener;
+    
     public SubsamplingScaleImageView(Context context, AttributeSet attr) {
         super(context, attr);
         setMinimumDpi(160);
@@ -790,6 +793,9 @@ public class SubsamplingScaleImageView extends View {
                     isZooming = false;
                     isPanning = false;
                     maxTouchCount = 0;
+                    
+                    if (onImageClickListener != null)
+                    	onImageClickListener.onImageClick(this, (event.getX(0)-vTranslate.x)/scale, (event.getY(0)-vTranslate.y)/scale);
                 }
                 return true;
         }
@@ -800,7 +806,11 @@ public class SubsamplingScaleImageView extends View {
     public void setOnLongClickListener(OnLongClickListener onLongClickListener) {
         this.onLongClickListener = onLongClickListener;
     }
-
+    
+    public void setOnImageClickListener(OnImageClickListener onImageClickListener) {
+        this.onImageClickListener = onImageClickListener;
+    }
+    
     /**
      * Draw method should not be called until the view has dimensions so the first calls are used as triggers to calculate
      * the scaling and tiling required. Once the view is setup, tiles are displayed as they are loaded.
@@ -2168,5 +2178,17 @@ public class SubsamplingScaleImageView extends View {
             invalidate();
         }
 
+    }
+    
+    /**
+     * Interface definition for a callback to be invoked when a image has been clicked
+     */
+    public interface OnImageClickListener {
+        /**
+         * Called when a image has been clicked
+         * @param v The view
+         * @param x,y Coordinate of the click
+         */
+    	void onImageClick(View v, float x, float y);
     }
 }
